@@ -11,111 +11,173 @@
 <body>
   <main class="container">
     <header class="masthead">
-      <p class="eyebrow">In-browser pose classification</p>
+      <div class="masthead-bar">
+        <p class="eyebrow">In-browser pose classification</p>
+        <button id="resetLayout" type="button" class="link-button layout-reset-btn" title="Reset widgets to default layout">
+          <svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8">
+            <path d="M1 1v5h5M15 15v-5h-5"/>
+            <path d="M2.5 10a6 6 0 0 0 10.5-2M13.5 6a6 6 0 0 0-10.5 2"/>
+          </svg>
+          Reset layout
+        </button>
+      </div>
       <h1><img class="project-mark" src="./app-icon.svg" alt="" width="36" height="36">possess</h1>
       <p class="subtitle">A pose estimator finds your joints, a classifier names the pose. Both run on this
         machine: the camera feed never leaves the browser and there is no server to send it to.</p>
     </header>
 
-    <section class="card" aria-labelledby="source-title">
-      <h2 id="source-title">Camera and model</h2>
-      <div class="button-row">
-        <button id="startCamera" type="button">Start camera</button>
-        <button id="stopCamera" type="button" class="secondary" disabled>Stop</button>
-        <label class="file-button" for="videoFile">Video file<input id="videoFile" type="file" accept="video/*" /></label>
-        <label class="file-button" for="imageFile">Image<input id="imageFile" type="file" accept="image/*" /></label>
-      </div>
-
-      <div class="stage" id="stage">
-        <video id="video" playsinline muted></video>
-        <img id="stillImage" alt="" hidden />
-        <canvas id="overlay"></canvas>
-        <p class="stage-empty" id="stageEmpty">Start the camera, or pick a video or image.</p>
-      </div>
-
-      <div class="toggle-row">
-        <label class="checkbox"><input id="mirrorToggle" type="checkbox" checked /> Mirror the camera view</label>
-        <span class="perf" id="perf"></span>
-      </div>
-
-      <details class="advanced" id="modelOptions">
-        <summary>Pose model</summary>
-        <label for="modelId">Variant</label>
-        <select id="modelId"></select>
-        <p class="hint" id="modelNote"></p>
-        <div class="model-toolbar">
-          <span id="cacheStatus" class="cache-status">Checking cache…</span>
-          <button id="downloadBtn" class="download-btn" type="button">Download for offline use</button>
+    <div class="dashboard-grid" id="dashboardGrid">
+      <section class="card widget" id="widgetSource" data-widget="source" data-cols="7" aria-labelledby="source-title">
+        <div class="widget-header">
+          <div class="widget-title-area">
+            <span class="drag-handle" title="Drag to reorder" aria-label="Drag widget">
+              <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor">
+                <circle cx="5" cy="3.5" r="1.5"/><circle cx="11" cy="3.5" r="1.5"/>
+                <circle cx="5" cy="8" r="1.5"/><circle cx="11" cy="8" r="1.5"/>
+                <circle cx="5" cy="12.5" r="1.5"/><circle cx="11" cy="12.5" r="1.5"/>
+              </svg>
+            </span>
+            <h2 id="source-title">Camera and model</h2>
+          </div>
+          <div class="widget-actions">
+            <button type="button" class="widget-span-btn" title="Cycle width">
+              <span class="span-indicator">7 cols</span>
+            </button>
+          </div>
         </div>
-        <div id="progressBar" class="progress-bar hidden" aria-live="polite">
-          <div id="progressFill" class="progress-bar-fill" style="width: 0%"></div>
-        </div>
-      </details>
 
-      <div id="status" class="status" role="status" aria-live="polite"></div>
-    </section>
-
-    <section class="card" aria-labelledby="prediction-title">
-      <div class="section-heading">
-        <h2 id="prediction-title">Prediction</h2>
-        <select id="backendMode" aria-label="Classifier">
-          <option value="rules">Built-in poses</option>
-          <option value="trained">My trained model</option>
-        </select>
-      </div>
-
-      <div class="readout">
-        <strong id="topLabel">—</strong>
-        <span id="topScore" class="readout-score"></span>
-      </div>
-      <ul id="scoreList" class="scores" aria-live="polite"></ul>
-
-      <div class="section-heading counts-heading">
-        <h3>Times held</h3>
-        <button id="resetCounts" type="button" class="link-button">Reset</button>
-      </div>
-      <ul id="repCounts" class="counts"></ul>
-
-      <details class="advanced">
-        <summary>Joint measurements</summary>
-        <ul id="measurements" class="measurements"></ul>
-      </details>
-    </section>
-
-    <section class="card" aria-labelledby="teach-title">
-      <h2 id="teach-title">Teach your own poses</h2>
-      <p class="hint">Name a pose, hold it in front of the camera, and record a few seconds. Two poses with
-        about 100 samples each are enough to train.</p>
-
-      <div class="record-row">
-        <input id="className" type="text" placeholder="Pose name, e.g. arms crossed" aria-label="Pose name" />
-        <button id="recordBtn" type="button" disabled>Record</button>
-      </div>
-      <div class="toggle-row">
-        <label class="checkbox"><input id="mirrorAugment" type="checkbox" checked /> Also store the mirrored pose</label>
-        <label class="checkbox"><input id="recordSeconds" type="number" min="1" max="30" step="1" value="4" /> seconds per take</label>
-      </div>
-
-      <ul id="classList" class="class-list"></ul>
-
-      <div class="button-row">
-        <button id="trainBtn" type="button" disabled>Train classifier</button>
-        <button id="clearData" type="button" class="secondary">Clear samples</button>
-      </div>
-      <div id="trainStatus" class="status" role="status" aria-live="polite"></div>
-
-      <details class="advanced">
-        <summary>Save and load</summary>
         <div class="button-row">
-          <button id="exportData" type="button" class="secondary">Export samples</button>
-          <label class="file-button" for="importData">Import samples<input id="importData" type="file" accept="application/json" /></label>
-          <button id="exportModel" type="button" class="secondary">Export model</button>
-          <label class="file-button" for="importModel">Import model<input id="importModel" type="file" accept="application/json" /></label>
+          <button id="startCamera" type="button">Start camera</button>
+          <button id="stopCamera" type="button" class="secondary" disabled>Stop</button>
+          <label class="file-button" for="videoFile">Video file<input id="videoFile" type="file" accept="video/*" /></label>
+          <label class="file-button" for="imageFile">Image<input id="imageFile" type="file" accept="image/*" /></label>
         </div>
-        <p class="hint">Samples are kept in this browser's local storage between visits. Exported files are
-          plain JSON: feature vectors for the samples, weights for the model.</p>
-      </details>
-    </section>
+
+        <div class="stage" id="stage">
+          <video id="video" playsinline muted></video>
+          <img id="stillImage" alt="" hidden />
+          <canvas id="overlay"></canvas>
+          <p class="stage-empty" id="stageEmpty">Start the camera, or pick a video or image.</p>
+        </div>
+
+        <div class="toggle-row">
+          <label class="checkbox"><input id="mirrorToggle" type="checkbox" checked /> Mirror the camera view</label>
+          <span class="perf" id="perf"></span>
+        </div>
+
+        <details class="advanced" id="modelOptions">
+          <summary>Pose model</summary>
+          <label for="modelId">Variant</label>
+          <select id="modelId"></select>
+          <p class="hint" id="modelNote"></p>
+          <div class="model-toolbar">
+            <span id="cacheStatus" class="cache-status">Checking cache…</span>
+            <button id="downloadBtn" class="download-btn" type="button">Download for offline use</button>
+          </div>
+          <div id="progressBar" class="progress-bar hidden" aria-live="polite">
+            <div id="progressFill" class="progress-bar-fill" style="width: 0%"></div>
+          </div>
+        </details>
+
+        <div id="status" class="status" role="status" aria-live="polite"></div>
+        <div class="widget-resize-handle" title="Drag to resize width"></div>
+      </section>
+
+      <section class="card widget" id="widgetPrediction" data-widget="prediction" data-cols="5" aria-labelledby="prediction-title">
+        <div class="widget-header">
+          <div class="widget-title-area">
+            <span class="drag-handle" title="Drag to reorder" aria-label="Drag widget">
+              <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor">
+                <circle cx="5" cy="3.5" r="1.5"/><circle cx="11" cy="3.5" r="1.5"/>
+                <circle cx="5" cy="8" r="1.5"/><circle cx="11" cy="8" r="1.5"/>
+                <circle cx="5" cy="12.5" r="1.5"/><circle cx="11" cy="12.5" r="1.5"/>
+              </svg>
+            </span>
+            <h2 id="prediction-title">Prediction</h2>
+          </div>
+          <div class="widget-actions">
+            <select id="backendMode" aria-label="Classifier">
+              <option value="rules">Built-in poses</option>
+              <option value="trained">My trained model</option>
+            </select>
+            <button type="button" class="widget-span-btn" title="Cycle width">
+              <span class="span-indicator">5 cols</span>
+            </button>
+          </div>
+        </div>
+
+        <div class="readout">
+          <strong id="topLabel">—</strong>
+          <span id="topScore" class="readout-score"></span>
+        </div>
+        <ul id="scoreList" class="scores" aria-live="polite"></ul>
+
+        <div class="section-heading counts-heading">
+          <h3>Times held</h3>
+          <button id="resetCounts" type="button" class="link-button">Reset</button>
+        </div>
+        <ul id="repCounts" class="counts"></ul>
+
+        <details class="advanced">
+          <summary>Joint measurements</summary>
+          <ul id="measurements" class="measurements"></ul>
+        </details>
+        <div class="widget-resize-handle" title="Drag to resize width"></div>
+      </section>
+
+      <section class="card widget" id="widgetTeach" data-widget="teach" data-cols="12" aria-labelledby="teach-title">
+        <div class="widget-header">
+          <div class="widget-title-area">
+            <span class="drag-handle" title="Drag to reorder" aria-label="Drag widget">
+              <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor">
+                <circle cx="5" cy="3.5" r="1.5"/><circle cx="11" cy="3.5" r="1.5"/>
+                <circle cx="5" cy="8" r="1.5"/><circle cx="11" cy="8" r="1.5"/>
+                <circle cx="5" cy="12.5" r="1.5"/><circle cx="11" cy="12.5" r="1.5"/>
+              </svg>
+            </span>
+            <h2 id="teach-title">Teach your own poses</h2>
+          </div>
+          <div class="widget-actions">
+            <button type="button" class="widget-span-btn" title="Cycle width">
+              <span class="span-indicator">12 cols</span>
+            </button>
+          </div>
+        </div>
+
+        <p class="hint">Name a pose, hold it in front of the camera, and record a few seconds. Two poses with
+          about 100 samples each are enough to train.</p>
+
+        <div class="record-row">
+          <input id="className" type="text" placeholder="Pose name, e.g. arms crossed" aria-label="Pose name" />
+          <button id="recordBtn" type="button" disabled>Record</button>
+        </div>
+        <div class="toggle-row">
+          <label class="checkbox"><input id="mirrorAugment" type="checkbox" checked /> Also store the mirrored pose</label>
+          <label class="checkbox"><input id="recordSeconds" type="number" min="1" max="30" step="1" value="4" /> seconds per take</label>
+        </div>
+
+        <ul id="classList" class="class-list"></ul>
+
+        <div class="button-row">
+          <button id="trainBtn" type="button" disabled>Train classifier</button>
+          <button id="clearData" type="button" class="secondary">Clear samples</button>
+        </div>
+        <div id="trainStatus" class="status" role="status" aria-live="polite"></div>
+
+        <details class="advanced">
+          <summary>Save and load</summary>
+          <div class="button-row">
+            <button id="exportData" type="button" class="secondary">Export samples</button>
+            <label class="file-button" for="importData">Import samples<input id="importData" type="file" accept="application/json" /></label>
+            <button id="exportModel" type="button" class="secondary">Export model</button>
+            <label class="file-button" for="importModel">Import model<input id="importModel" type="file" accept="application/json" /></label>
+          </div>
+          <p class="hint">Samples are kept in this browser's local storage between visits. Exported files are
+            plain JSON: feature vectors for the samples, weights for the model.</p>
+        </details>
+        <div class="widget-resize-handle" title="Drag to resize width"></div>
+      </section>
+    </div>
 
     <p class="disclaimer">Pose estimation by MediaPipe Pose Landmarker, downloaded once and cached locally.</p>
   </main>

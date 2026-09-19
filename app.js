@@ -734,6 +734,186 @@
     }
   });
 
+  /* ---------- modular dashboard widgets ---------- */
+
+  const WIDGET_STORAGE_KEY = 'possess.widgets.v1';
+  const DEFAULT_LAYOUT = {
+    order: ['source', 'prediction', 'teach'],
+    cols: { source: 7, prediction: 5, teach: 12 }
+  };
+
+  function initWidgets() {
+    const grid = doc.getElementById('dashboardGrid');
+    if (!grid) return;
+
+    function loadLayout() {
+      try {
+        const raw = global.localStorage.getItem(WIDGET_STORAGE_KEY);
+        if (raw) {
+          const parsed = JSON.parse(raw);
+          if (parsed && Array.isArray(parsed.order) && parsed.cols) return parsed;
+        }
+      } catch (err) { /* ignore */ }
+      return DEFAULT_LAYOUT;
+    }
+
+    function saveLayout() {
+      try {
+        const widgets = Array.from(grid.querySelectorAll('.widget'));
+        const order = widgets.map(function (w) { return w.dataset.widget; });
+        const cols = {};
+        widgets.forEach(function (w) { cols[w.dataset.widget] = parseInt(w.dataset.cols, 10) || 12; });
+        global.localStorage.setItem(WIDGET_STORAGE_KEY, JSON.stringify({ order: order, cols: cols }));
+      } catch (err) { /* ignore */ }
+    }
+
+    function applyLayout(layout) {
+      const widgetsById = {};
+      grid.querySelectorAll('.widget').forEach(function (w) {
+        widgetsById[w.dataset.widget] = w;
+      });
+
+      layout.order.forEach(function (id) {
+        const w = widgetsById[id];
+        if (w) {
+          grid.appendChild(w);
+          const col = layout.cols[id] || 12;
+          w.dataset.cols = col;
+          updateSpanIndicator(w, col);
+        }
+      });
+    }
+
+    function updateSpanIndicator(widget, cols) {
+      const indicator = widget.querySelector('.span-indicator');
+      if (indicator) indicator.textContent = cols + ' cols';
+    }
+
+    // Initialize layout
+    applyLayout(loadLayout());
+
+    // Reset layout button
+    const resetBtn = doc.getElementById('resetLayout');
+    if (resetBtn) {
+      resetBtn.addEventListener('click', function () {
+        global.localStorage.removeItem(WIDGET_STORAGE_KEY);
+        applyLayout(DEFAULT_LAYOUT);
+      });
+    }
+
+    // Drag & Drop reordering
+    let draggedWidget = null;
+
+    grid.querySelectorAll('.widget').forEach(function (widget) {
+      const handle = widget.querySelector('.drag-handle');
+      if (handle) {
+        handle.addEventListener('mouseenter', function () { widget.draggable = true; });
+        handle.addEventListener('mouseleave', function () { if (!draggedWidget) widget.draggable = false; });
+      }
+
+      widget.addEventListener('dragstart', function (e) {
+        draggedWidget = widget;
+        widget.classList.add('is-dragging');
+        e.dataTransfer.effectAllowed = 'move';
+        e.dataTransfer.setData('text/plain', widget.dataset.widget);
+      });
+
+      widget.addEventListener('dragend', function () {
+        widget.classList.remove('is-dragging');
+        draggedWidget = null;
+        widget.draggable = false;
+        grid.querySelectorAll('.widget').forEach(function (w) {
+          w.classList.remove('drag-over-before', 'drag-over-after');
+        });
+        saveLayout();
+      });
+
+      widget.addEventListener('dragover', function (e) {
+        if (!draggedWidget || draggedWidget === widget) return;
+        e.preventDefault();
+        e.dataTransfer.dropEffect = 'move';
+
+        const rect = widget.getBoundingClientRect();
+        const midY = rect.top + rect.height / 2;
+        if (e.clientY < midY) {
+          widget.classList.add('drag-over-before');
+          widget.classList.remove('drag-over-after');
+        } else {
+          widget.classList.add('drag-over-after');
+          widget.classList.remove('drag-over-before');
+        }
+      });
+
+      widget.addEventListener('dragleave', function () {
+        widget.classList.remove('drag-over-before', 'drag-over-after');
+      });
+
+      widget.addEventListener('drop', function (e) {
+        if (!draggedWidget || draggedWidget === widget) return;
+        e.preventDefault();
+        const rect = widget.getBoundingClientRect();
+        const midY = rect.top + rect.height / 2;
+        if (e.clientY < midY) {
+          grid.insertBefore(draggedWidget, widget);
+        } else {
+          grid.insertBefore(draggedWidget, widget.nextSibling);
+        }
+        widget.classList.remove('drag-over-before', 'drag-over-after');
+        saveLayout();
+      });
+
+      // Quick span cycle button
+      const spanBtn = widget.querySelector('.widget-span-btn');
+      if (spanBtn) {
+        spanBtn.addEventListener('click', function () {
+          const current = parseInt(widget.dataset.cols, 10) || 12;
+          const cycle = [6, 7, 8, 12, 4, 5];
+          const nextIdx = (cycle.indexOf(current) + 1) % cycle.length;
+          const next = cycle[nextIdx];
+          widget.dataset.cols = next;
+          updateSpanIndicator(widget, next);
+          saveLayout();
+        });
+      }
+
+      // Drag-to-resize corner handle
+      const resizeHandle = widget.querySelector('.widget-resize-handle');
+      if (resizeHandle) {
+        resizeHandle.addEventListener('pointerdown', function (e) {
+          e.preventDefault();
+          resizeHandle.setPointerCapture(e.pointerId);
+          widget.classList.add('is-resizing');
+
+          const startX = e.clientX;
+          const startCols = parseInt(widget.dataset.cols, 10) || 12;
+          const gridWidth = grid.getBoundingClientRect().width;
+          const oneColWidth = gridWidth / 12;
+
+          function onPointerMove(moveEvent) {
+            const deltaX = moveEvent.clientX - startX;
+            const colDelta = Math.round(deltaX / oneColWidth);
+            const targetCols = Math.min(12, Math.max(4, startCols + colDelta));
+            if (parseInt(widget.dataset.cols, 10) !== targetCols) {
+              widget.dataset.cols = targetCols;
+              updateSpanIndicator(widget, targetCols);
+            }
+          }
+
+          function onPointerUp(upEvent) {
+            resizeHandle.releasePointerCapture(upEvent.pointerId);
+            resizeHandle.removeEventListener('pointermove', onPointerMove);
+            resizeHandle.removeEventListener('pointerup', onPointerUp);
+            widget.classList.remove('is-resizing');
+            saveLayout();
+          }
+
+          resizeHandle.addEventListener('pointermove', onPointerMove);
+          resizeHandle.addEventListener('pointerup', onPointerUp);
+        });
+      }
+    });
+  }
+
   /* ---------- start ---------- */
 
   populateModels();
@@ -744,6 +924,7 @@
   renderCounts({});
   if (state.model) el.backendMode.value = 'trained';
   showStage('none');
+  initWidgets();
 
   // Exposed for the end-to-end test, which drives the page without a camera.
   global.__possess = state;
