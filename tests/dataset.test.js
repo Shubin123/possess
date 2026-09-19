@@ -97,7 +97,7 @@ test('reports rather than throws when storage is full', () => {
 test('starts empty when storage holds nothing usable', () => {
   const storage = fakeStorage();
   assert.equal(PoseDataset.load(storage).samples.length, 0);
-  storage.setItem('poser.dataset.v1', 'not json at all');
+  storage.setItem('possess.dataset.v1', 'not json at all');
   assert.equal(PoseDataset.load(storage).samples.length, 0, 'corrupt storage is ignored');
 });
 
@@ -111,10 +111,10 @@ test('clearing removes both the samples and what was stored', () => {
   assert.equal(PoseDataset.load(storage).samples.length, 0);
 });
 
-test('refuses an import that is not a poser dataset', () => {
-  assert.throws(() => PoseDataset.fromJSON({ format: 'nope' }), /not a poser dataset/i);
+test('refuses an import that is not a possess dataset', () => {
+  assert.throws(() => PoseDataset.fromJSON({ format: 'nope' }), /not a possess dataset/i);
   assert.throws(
-    () => PoseDataset.fromJSON({ format: 'poser-dataset', featureLength: 7, samples: [] }),
+    () => PoseDataset.fromJSON({ format: 'possess-dataset', featureLength: 7, samples: [] }),
     /different feature layout/i
   );
 });

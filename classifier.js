@@ -1,5 +1,5 @@
 /*
- * poser - the pose classifier itself.
+ * possess - the pose classifier itself.
  *
  * Two heads share one feature vector (features.js, 60 dims):
  *
@@ -305,7 +305,7 @@
   MlpClassifier.prototype.toJSON = function () {
     if (!this.trained) throw new Error('Model is not trained');
     return {
-      format: 'poser-mlp',
+      format: 'possess-mlp',
       version: 1,
       labels: this.labels.slice(),
       hidden: this.hidden,
@@ -320,7 +320,9 @@
   };
 
   MlpClassifier.fromJSON = function (json) {
-    if (!json || json.format !== 'poser-mlp') throw new Error('Not a poser model file');
+    if (!json || json.format !== 'possess-mlp') {
+      throw new Error('Not a possess model file');
+    }
     const model = new MlpClassifier({ hidden: json.hidden });
     model.labels = json.labels.slice();
     model.scaler = {

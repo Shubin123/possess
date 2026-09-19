@@ -1,5 +1,5 @@
 /*
- * poser - the recorded training samples.
+ * possess - the recorded training samples.
  *
  * Holds one feature vector per captured frame, grouped by pose name, and keeps
  * the whole thing in localStorage so a session survives a reload. Samples are
@@ -13,7 +13,7 @@
 (function (global) {
   const PZ = (global.PZ = global.PZ || {});
 
-  const STORAGE_KEY = 'poser.dataset.v1';
+  const STORAGE_KEY = 'possess.dataset.v1';
   const DEFAULT_MAX_PER_CLASS = 600;
 
   function round4(value) { return Math.round(value * 1e4) / 1e4; }
@@ -93,7 +93,7 @@
 
   PoseDataset.prototype.toJSON = function () {
     return {
-      format: 'poser-dataset',
+      format: 'possess-dataset',
       version: 1,
       featureLength: PZ.features ? PZ.features.FEATURE_LENGTH : undefined,
       featureNames: PZ.features ? PZ.features.FEATURE_NAMES : undefined,
@@ -105,7 +105,9 @@
   };
 
   PoseDataset.fromJSON = function (json, options) {
-    if (!json || json.format !== 'poser-dataset') throw new Error('Not a poser dataset file');
+    if (!json || json.format !== 'possess-dataset') {
+      throw new Error('Not a possess dataset file');
+    }
     const expected = PZ.features ? PZ.features.FEATURE_LENGTH : null;
     if (expected && json.featureLength && json.featureLength !== expected) {
       throw new Error('Dataset was recorded with a different feature layout');
@@ -145,7 +147,11 @@
 
   PoseDataset.clearStorage = function (storage) {
     const store = storage || safeStorage();
-    if (store) { try { store.removeItem(STORAGE_KEY); } catch (err) { /* ignore */ } }
+    if (store) {
+      try {
+        store.removeItem(STORAGE_KEY);
+      } catch (err) { /* ignore */ }
+    }
   };
 
   function safeStorage() {

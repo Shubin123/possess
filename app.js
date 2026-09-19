@@ -1,5 +1,5 @@
 /*
- * poser - the page.
+ * possess - the page.
  *
  * Wires the camera to the estimator, the estimator to the classifier and the
  * classifier to the screen. Everything it touches is local: getUserMedia for
@@ -11,7 +11,7 @@
   const doc = global.document;
   const $ = function (id) { return doc.getElementById(id); };
 
-  const MODEL_KEY = 'poser.model.v1';
+  const MODEL_KEY = 'possess.model.v1';
   const MIN_SAMPLES_PER_CLASS = 10;
 
   const el = {
@@ -674,14 +674,16 @@
     state.smoother.reset();
     state.renderedLabels = null;
     PZ.dataset.PoseDataset.clearStorage();
-    try { global.localStorage.removeItem(MODEL_KEY); } catch (err) { /* nothing stored */ }
+    try {
+      global.localStorage.removeItem(MODEL_KEY);
+    } catch (err) { /* nothing stored */ }
     renderClasses();
     setTrainStatus('All samples cleared.');
   });
-  el.exportData.addEventListener('click', function () { download('poser-samples.json', state.dataset.toJSON()); });
+  el.exportData.addEventListener('click', function () { download('possess-samples.json', state.dataset.toJSON()); });
   el.exportModel.addEventListener('click', function () {
     if (!state.model) { setTrainStatus('Train a model before exporting it.', true); return; }
-    download('poser-model.json', state.model.toJSON());
+    download('possess-model.json', state.model.toJSON());
   });
   el.importData.addEventListener('change', async function (e) {
     const file = e.target.files[0];
@@ -723,5 +725,5 @@
   showStage('none');
 
   // Exposed for the end-to-end test, which drives the page without a camera.
-  global.__poser = state;
+  global.__possess = state;
 })(typeof globalThis !== 'undefined' ? globalThis : this);

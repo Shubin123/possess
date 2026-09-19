@@ -1,5 +1,5 @@
 /*
- * poser - the built-in pose rules.
+ * possess - the built-in pose rules.
  *
  * The trained classifier needs you to record samples first. This head needs
  * nothing: it scores a handful of everyday poses straight from joint angles,

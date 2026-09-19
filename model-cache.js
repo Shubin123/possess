@@ -1,5 +1,5 @@
 /*
- * poser - persistent browser storage for the pose model file.
+ * possess - persistent browser storage for the pose model file.
  *
  * The Pose Landmarker weights are 5-30 MB depending on the variant. They are
  * stored as raw ArrayBuffers in IndexedDB so the download happens once and
@@ -10,7 +10,7 @@
 (function (global) {
   const PZ = (global.PZ = global.PZ || {});
 
-  const DB_NAME = 'poser-model-cache';
+  const DB_NAME = 'possess-model-cache';
   const DB_VERSION = 1;
   const STORE = 'models';
   let _db = null;

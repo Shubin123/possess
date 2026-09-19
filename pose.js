@@ -1,5 +1,5 @@
 /*
- * poser - the pose estimator.
+ * possess - the pose estimator.
  *
  * Wraps MediaPipe's Pose Landmarker (BlazePose GHUM), the successor to the
  * PoseNet/MoveNet line: 33 landmarks per person, running on WebGL or WASM in

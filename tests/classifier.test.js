@@ -86,9 +86,9 @@ test('an exported model predicts exactly like the one it came from', () => {
   });
 });
 
-test('refuses to load something that is not a poser model', () => {
-  assert.throws(() => MlpClassifier.fromJSON({ format: 'something-else' }), /not a poser model/i);
-  assert.throws(() => MlpClassifier.fromJSON(null), /not a poser model/i);
+test('refuses to load something that is not a possess model', () => {
+  assert.throws(() => MlpClassifier.fromJSON({ format: 'something-else' }), /not a possess model/i);
+  assert.throws(() => MlpClassifier.fromJSON(null), /not a possess model/i);
   assert.throws(() => new MlpClassifier().toJSON(), /not trained/i);
 });
 

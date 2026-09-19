@@ -185,7 +185,7 @@ async function main() {
 
     const classList = await text(page, '#classList');
     assert.ok(classList.includes('alpha') && classList.includes('beta'), 'both poses are listed: ' + classList);
-    const sampleCount = await page.evaluate(function () { return globalThis.__poser.dataset.samples.length; });
+    const sampleCount = await page.evaluate(function () { return globalThis.__possess.dataset.samples.length; });
     assert.ok(sampleCount >= 20, 'recorded ' + sampleCount + ' samples');
 
     /* --- the trained classifier --- */
@@ -219,13 +219,13 @@ async function main() {
     }, { timeout: 10000, polling: 100 });
 
     /* --- everything survives a reload, still with no server --- */
-    const beforeReload = await page.evaluate(function () { return globalThis.__poser.dataset.samples.length; });
+    const beforeReload = await page.evaluate(function () { return globalThis.__possess.dataset.samples.length; });
     await page.reload({ waitUntil: 'domcontentloaded' });
     const restored = await page.evaluate(function () {
       return {
-        samples: globalThis.__poser.dataset.samples.length,
-        labels: globalThis.__poser.dataset.labels,
-        model: globalThis.__poser.model ? globalThis.__poser.model.labels : null
+        samples: globalThis.__possess.dataset.samples.length,
+        labels: globalThis.__possess.dataset.labels,
+        model: globalThis.__possess.model ? globalThis.__possess.model.labels : null
       };
     });
     assert.equal(restored.samples, beforeReload, 'samples came back from local storage');
@@ -241,13 +241,13 @@ async function main() {
     /* --- exports are the documented shape --- */
     const exported = await page.evaluate(function () {
       return {
-        dataset: globalThis.__poser.dataset.toJSON(),
-        model: globalThis.__poser.model.toJSON()
+        dataset: globalThis.__possess.dataset.toJSON(),
+        model: globalThis.__possess.model.toJSON()
       };
     });
-    assert.equal(exported.dataset.format, 'poser-dataset');
+    assert.equal(exported.dataset.format, 'possess-dataset');
     assert.equal(exported.dataset.featureLength, exported.model.inputSize);
-    assert.equal(exported.model.format, 'poser-mlp');
+    assert.equal(exported.model.format, 'possess-mlp');
     assert.deepEqual(exported.model.labels, ['alpha', 'beta']);
 
     assert.deepEqual(offOrigin, [], 'the page talked to nothing but the model CDNs');

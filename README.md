@@ -1,4 +1,4 @@
-# poser
+# possess
 
 Teach a browser to recognize poses. A pose estimator finds your joints, a
 classifier names the pose, and both run on your own machine: the camera feed
@@ -11,7 +11,7 @@ a small neural network learns them in the page, in under a second.
 
 ## Demo
 
-**Live Demo**: [https://shubin123.github.io/poser/](https://shubin123.github.io/poser/)
+**Live Demo**: [https://shubin123.github.io/possess/](https://shubin123.github.io/possess/)
 
 ![The app recognizing a T-pose](demo/preview.png)
 

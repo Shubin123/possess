@@ -1,5 +1,5 @@
 /*
- * poser - landmarks to a pose feature vector (no frameworks, no build step).
+ * possess - landmarks to a pose feature vector (no frameworks, no build step).
  *
  * The pose estimator (MediaPipe Pose Landmarker) returns 33 landmarks in
  * normalized image coordinates.  Raw landmarks are a poor classifier input:
