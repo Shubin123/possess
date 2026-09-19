@@ -304,8 +304,13 @@
     if (!landmarks) return;
     const scale = Math.max(1, Math.min(size.width, size.height) / 240);
 
-    ctx.lineWidth = 2.4 * scale;
-    ctx.strokeStyle = 'rgba(157, 180, 240, 0.9)';
+    ctx.save();
+    ctx.lineCap = 'round';
+    ctx.lineJoin = 'round';
+
+    // Outer subtle luminescent halo
+    ctx.lineWidth = 3.6 * scale;
+    ctx.strokeStyle = 'rgba(56, 189, 248, 0.35)';
     ctx.beginPath();
     PZ.features.SKELETON.forEach(function (bone) {
       const a = landmarks[bone[0]], b = landmarks[bone[1]];
@@ -315,14 +320,30 @@
     });
     ctx.stroke();
 
-    ctx.fillStyle = '#f6f7fd';
+    // Inner crisp beam
+    ctx.lineWidth = 1.8 * scale;
+    ctx.strokeStyle = 'rgba(224, 242, 254, 0.95)';
+    ctx.stroke();
+
+    // Joints: two-tier glowing nodes
     PZ.features.POINTS.forEach(function (index) {
       const p = landmarks[index];
       if (!p) return;
+      const x = p.x * size.width, y = p.y * size.height;
+
+      // Outer soft halo
       ctx.beginPath();
-      ctx.arc(p.x * size.width, p.y * size.height, 2.4 * scale, 0, Math.PI * 2);
+      ctx.arc(x, y, 4.2 * scale, 0, Math.PI * 2);
+      ctx.fillStyle = 'rgba(56, 189, 248, 0.35)';
+      ctx.fill();
+
+      // Inner crisp node
+      ctx.beginPath();
+      ctx.arc(x, y, 2.0 * scale, 0, Math.PI * 2);
+      ctx.fillStyle = '#ffffff';
       ctx.fill();
     });
+    ctx.restore();
   }
 
   /* ---------- classification ---------- */
