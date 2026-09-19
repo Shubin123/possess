@@ -11,6 +11,8 @@ a small neural network learns them in the page, in under a second.
 
 ## Demo
 
+**Live Demo**: [https://shubin123.github.io/poser/](https://shubin123.github.io/poser/)
+
 ![The app recognizing a T-pose](demo/preview.png)
 
 *The page running against the test harness, which replays synthetic skeletons
