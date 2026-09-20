@@ -31,7 +31,25 @@
     mirrorAugment: $('mirrorAugment'), classList: $('classList'),
     trainBtn: $('trainBtn'), clearData: $('clearData'), trainStatus: $('trainStatus'),
     exportData: $('exportData'), importData: $('importData'),
-    exportModel: $('exportModel'), importModel: $('importModel')
+    exportModel: $('exportModel'), importModel: $('importModel'),
+
+    // Health suite elements
+    postureReadout: $('postureReadout'), postureScoreNum: $('postureScoreNum'),
+    postureScoreBadge: $('postureScoreBadge'), postureLabel: $('postureLabel'),
+    postureAdvice: $('postureAdvice'), postureHeadVal: $('postureHeadVal'),
+    postureSpineVal: $('postureSpineVal'), postureShoulderVal: $('postureShoulderVal'),
+    calibratePosture: $('calibratePosture'), postureAlertToggle: $('postureAlertToggle'),
+
+    routineSelect: $('routineSelect'), routineStepBadge: $('routineStepBadge'),
+    routineRepBadge: $('routineRepBadge'), routineStepName: $('routineStepName'),
+    routineCue: $('routineCue'), routineHoldTimer: $('routineHoldTimer'),
+    routineProgressBar: $('routineProgressBar'), routineToggleBtn: $('routineToggleBtn'),
+    routineResetBtn: $('routineResetBtn'),
+
+    romJointSelect: $('romJointSelect'), romCurrentDeg: $('romCurrentDeg'),
+    romPeakDeg: $('romPeakDeg'), romNormLabel: $('romNormLabel'),
+    romProgressFill: $('romProgressFill'), romTestBtn: $('romTestBtn'),
+    romTestStatus: $('romTestStatus'), exportHealthReport: $('exportHealthReport')
   };
 
   const state = {
@@ -51,7 +69,14 @@
     fpsAt: 0,
     fps: 0,
     latency: 0,
-    renderedLabels: null
+    renderedLabels: null,
+    health: (PZ.health ? {
+      posture: new PZ.health.PostureMonitor(),
+      routine: new PZ.health.RoutineEngine(true),
+      rom: new PZ.health.RomGoniometer(),
+      session: new PZ.health.HealthSessionManager(),
+      lastLandmarks: null
+    } : null)
   };
 
   const ctx = el.overlay.getContext('2d');
@@ -418,10 +443,15 @@
   }
 
   function handleFeature(feature, landmarks) {
-    if (!feature) {
+    if (!feature || !landmarks || landmarks.length < 33) {
       el.topLabel.textContent = '—';
       el.topScore.textContent = 'no pose detected';
       state.smoother.push(null);
+      if (state.health) {
+        renderPosture({ valid: false, label: 'No person detected', score: 0, advice: 'Step into camera frame' });
+        renderRoutine(state.health.routine.getStatus());
+        renderRom(state.health.rom.update(null));
+      }
       return;
     }
 
@@ -452,6 +482,9 @@
       }
     }
 
+    let activePose = null;
+    let activeScore = 0;
+
     if (prediction) {
       const smoothed = state.smoother.push(feature.visible ? prediction : null);
       const shown = feature.visible ? (smoothed.label || prediction.label) : 'out of frame';
@@ -461,9 +494,31 @@
         : 'step back so your whole body is visible';
       renderScores(prediction.labels, smoothed.scores || prediction.scores, shown);
       renderCounts(smoothed.counts);
+
+      if (feature.visible) {
+        activePose = smoothed.label || prediction.label;
+        activeScore = smoothed.score || prediction.score;
+      }
     }
 
     if (state.recording) captureSample(feature, landmarks);
+
+    // Health suite updates
+    if (state.health && landmarks && landmarks.length >= 33) {
+      state.health.lastLandmarks = landmarks;
+
+      const postResult = state.health.posture.analyze(landmarks);
+      renderPosture(postResult);
+      if (postResult.alert && el.postureAlertToggle && el.postureAlertToggle.checked) {
+        state.health.routine.playChime('rep');
+      }
+
+      const routineResult = state.health.routine.update(activePose, activeScore);
+      renderRoutine(routineResult);
+
+      const romResult = state.health.rom.update(landmarks);
+      renderRom(romResult);
+    }
   }
 
   function renderScores(labels, scores, leader) {
@@ -536,6 +591,87 @@
       li.append(name, value);
       el.measurements.appendChild(li);
     });
+  }
+
+  /* ---------- health rendering helpers ---------- */
+
+  function renderPosture(res) {
+    if (!el.postureLabel || !res) return;
+    if (!res.valid) {
+      el.postureLabel.textContent = res.label || 'No person detected';
+      el.postureAdvice.textContent = res.advice || 'Step into camera frame';
+      el.postureScoreNum.textContent = '—';
+      el.postureReadout.className = 'posture-readout';
+      return;
+    }
+
+    el.postureScoreNum.textContent = res.score;
+    el.postureLabel.textContent = res.label;
+    el.postureAdvice.textContent = res.advice;
+
+    el.postureReadout.className = 'posture-readout status-' + (res.status || 'good');
+    if (res.metrics) {
+      el.postureHeadVal.textContent = res.metrics.headAngle + '°';
+      el.postureSpineVal.textContent = res.metrics.spineAngle + '°';
+      el.postureShoulderVal.textContent = res.metrics.shoulderTilt + '°';
+    }
+  }
+
+  function renderRoutine(res) {
+    if (!el.routineStepName || !res) return;
+    if (res.state === 'idle') {
+      el.routineStepBadge.textContent = 'Ready';
+      el.routineRepBadge.textContent = 'Rep 0 / 0';
+      el.routineStepName.textContent = 'Select a routine';
+      el.routineCue.textContent = 'Click "Start routine" to begin guided therapy.';
+      el.routineHoldTimer.textContent = '0.0s';
+      el.routineProgressBar.style.width = '0%';
+      el.routineToggleBtn.textContent = 'Start routine';
+      return;
+    }
+
+    if (res.state === 'finished') {
+      el.routineStepBadge.textContent = 'Complete';
+      el.routineRepBadge.textContent = 'Done';
+      el.routineStepName.textContent = 'Routine Finished!';
+      el.routineCue.textContent = 'Great work! You completed all exercises with good form.';
+      el.routineHoldTimer.textContent = '100%';
+      el.routineProgressBar.style.width = '100%';
+      el.routineToggleBtn.textContent = 'Restart routine';
+      return;
+    }
+
+    const step = res.step;
+    el.routineStepBadge.textContent = 'Step ' + (res.stepIndex + 1) + ' / ' + res.totalSteps;
+    el.routineRepBadge.textContent = 'Rep ' + res.currentRep + ' / ' + res.targetReps;
+    if (step) {
+      el.routineStepName.textContent = step.label;
+      el.routineCue.textContent = (res.isMatching ? '✓ Good form! ' : 'Hold pose: ') + step.cue;
+      el.routineHoldTimer.textContent = res.elapsedHoldSec.toFixed(1) + 's / ' + res.holdSec + '.0s';
+      el.routineProgressBar.style.width = res.progressPercent + '%';
+    }
+    el.routineToggleBtn.textContent = 'Stop routine';
+  }
+
+  function renderRom(res) {
+    if (!el.romCurrentDeg || !res) return;
+    el.romCurrentDeg.textContent = res.currentDeg + '°';
+    el.romPeakDeg.textContent = res.sessionPeakDeg + '°';
+    el.romNormLabel.textContent = 'Peak (norm: ' + res.normalDeg + '°)';
+    el.romProgressFill.style.width = res.percentOfNormal + '%';
+
+    if (res.testActive) {
+      el.romTestBtn.textContent = 'Testing (' + res.testProgress + '%)';
+      el.romTestBtn.disabled = true;
+      el.romTestStatus.textContent = 'Measuring peak range: ' + res.testPeakDeg + '°...';
+    } else {
+      el.romTestBtn.textContent = 'Start 5s mobility test';
+      el.romTestBtn.disabled = false;
+      if (res.completedTestResult) {
+        const r = res.completedTestResult;
+        el.romTestStatus.textContent = 'Result: ' + r.peakDeg + '° (' + r.percentNormal + '% normal) — ' + r.grade;
+      }
+    }
   }
 
   /* ---------- recording and training ---------- */
@@ -812,10 +948,10 @@
 
   /* ---------- modular dashboard widgets ---------- */
 
-  const WIDGET_STORAGE_KEY = 'possess.widgets.v2';
+  const WIDGET_STORAGE_KEY = 'possess.widgets.v3';
   const DEFAULT_LAYOUT = {
-    order: ['source', 'prediction', 'teach'],
-    cols: { source: 5, prediction: 3, teach: 4 }
+    order: ['source', 'prediction', 'teach', 'posture', 'routine', 'rom'],
+    cols: { source: 5, prediction: 3, teach: 4, posture: 4, routine: 4, rom: 4 }
   };
 
   function initWidgets() {
@@ -853,9 +989,18 @@
         const w = widgetsById[id];
         if (w) {
           grid.appendChild(w);
-          const col = layout.cols[id] || 12;
+          const col = layout.cols[id] || (DEFAULT_LAYOUT.cols && DEFAULT_LAYOUT.cols[id]) || 12;
           w.dataset.cols = col;
+          delete widgetsById[id];
         }
+      });
+
+      // Append any remaining widgets that were not in saved layout
+      Object.keys(widgetsById).forEach(function (id) {
+        const w = widgetsById[id];
+        grid.appendChild(w);
+        const col = (DEFAULT_LAYOUT.cols && DEFAULT_LAYOUT.cols[id]) || 4;
+        w.dataset.cols = col;
       });
     }
 
@@ -976,6 +1121,81 @@
     });
   }
 
+  /* ---------- health event listeners ---------- */
+
+  if (el.calibratePosture) {
+    el.calibratePosture.addEventListener('click', function () {
+      if (state.health && state.health.lastLandmarks) {
+        const base = state.health.posture.calibrateBaseline(state.health.lastLandmarks);
+        if (base) {
+          el.calibratePosture.textContent = 'Calibrated ✓';
+          setTimeout(function () { el.calibratePosture.textContent = 'Calibrate'; }, 2000);
+        }
+      } else {
+        el.calibratePosture.textContent = 'Stand in frame first';
+        setTimeout(function () { el.calibratePosture.textContent = 'Calibrate'; }, 2000);
+      }
+    });
+  }
+
+  if (el.routineToggleBtn) {
+    el.routineToggleBtn.addEventListener('click', function () {
+      if (!state.health) return;
+      if (state.health.routine.state === 'idle' || state.health.routine.state === 'finished') {
+        state.health.routine.start(el.routineSelect ? el.routineSelect.value : 'desk-reset');
+      } else {
+        state.health.routine.stop();
+      }
+      renderRoutine(state.health.routine.getStatus());
+    });
+  }
+
+  if (el.routineResetBtn) {
+    el.routineResetBtn.addEventListener('click', function () {
+      if (!state.health) return;
+      state.health.routine.stop();
+      renderRoutine(state.health.routine.getStatus());
+    });
+  }
+
+  if (el.routineSelect) {
+    el.routineSelect.addEventListener('change', function () {
+      if (!state.health) return;
+      if (state.health.routine.state !== 'idle') {
+        state.health.routine.start(el.routineSelect.value);
+      }
+      renderRoutine(state.health.routine.getStatus());
+    });
+  }
+
+  if (el.romJointSelect) {
+    el.romJointSelect.addEventListener('change', function () {
+      if (!state.health) return;
+      state.health.rom.setJoint(el.romJointSelect.value);
+      renderRom(state.health.rom.update(state.health.lastLandmarks));
+    });
+  }
+
+  if (el.romTestBtn) {
+    el.romTestBtn.addEventListener('click', function () {
+      if (!state.health) return;
+      state.health.rom.startTest(5);
+      renderRom(state.health.rom.update(state.health.lastLandmarks));
+    });
+  }
+
+  if (el.exportHealthReport) {
+    el.exportHealthReport.addEventListener('click', function () {
+      if (!state.health) return;
+      const json = state.health.session.exportJSON(
+        state.health.posture,
+        state.health.routine,
+        state.health.rom
+      );
+      download('possess-health-report.json', json);
+    });
+  }
+
   /* ---------- start ---------- */
 
   populateModels();
@@ -987,6 +1207,12 @@
   if (state.model) el.backendMode.value = 'trained';
   showStage('none');
   initWidgets();
+
+  if (state.health) {
+    renderPosture({ valid: false, label: 'Ready', score: 100, advice: 'Stand in frame to monitor posture' });
+    renderRoutine(state.health.routine.getStatus());
+    renderRom(state.health.rom.update(null));
+  }
 
   // Exposed for the end-to-end test, which drives the page without a camera.
   global.__possess = state;

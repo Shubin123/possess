@@ -954,6 +954,280 @@ ul {
   color: var(--danger);
 }
 
+/* ---------- Health Suite Widgets ---------- */
+
+/* Posture Guard */
+.posture-readout {
+  display: flex;
+  align-items: center;
+  gap: 1.1rem;
+  padding: 1rem 1.25rem;
+  background: linear-gradient(135deg, rgba(16, 185, 129, 0.08) 0%, rgba(99, 102, 241, 0.06) 100%);
+  border: 1px solid rgba(16, 185, 129, 0.22);
+  border-radius: var(--radius-md);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+  transition: all 0.25s ease;
+}
+
+.posture-readout.status-mild {
+  background: linear-gradient(135deg, rgba(245, 158, 11, 0.1) 0%, rgba(99, 102, 241, 0.06) 100%);
+  border-color: rgba(245, 158, 11, 0.3);
+}
+
+.posture-readout.status-poor {
+  background: linear-gradient(135deg, rgba(244, 63, 94, 0.12) 0%, rgba(245, 158, 11, 0.06) 100%);
+  border-color: rgba(244, 63, 94, 0.35);
+}
+
+.posture-score-circle {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: 56px;
+  height: 56px;
+  border-radius: var(--radius-full);
+  background: rgba(16, 185, 129, 0.15);
+  border: 2px solid var(--emerald);
+  flex-shrink: 0;
+  transition: all 0.25s ease;
+}
+
+.posture-readout.status-mild .posture-score-circle {
+  background: rgba(245, 158, 11, 0.15);
+  border-color: #f59e0b;
+}
+
+.posture-readout.status-poor .posture-score-circle {
+  background: rgba(244, 63, 94, 0.15);
+  border-color: var(--danger);
+}
+
+.posture-score-circle .score-number {
+  font: 700 1.25rem/1 var(--font-mono);
+  color: #ffffff;
+}
+
+.posture-score-circle .score-unit {
+  font: 500 0.6rem/1 var(--font-mono);
+  color: var(--text-tertiary);
+  margin-top: 1px;
+}
+
+.posture-status-info {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  min-width: 0;
+}
+
+.posture-status-info strong {
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  letter-spacing: -0.02em;
+}
+
+.posture-advice {
+  margin: 0;
+  color: var(--text-secondary);
+  font-size: 0.8rem;
+  line-height: 1.35;
+}
+
+.posture-metrics-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.5rem;
+  margin-top: 0.85rem;
+}
+
+.metric-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 0.5rem 0.35rem;
+  background: rgba(255, 255, 255, 0.025);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  text-align: center;
+}
+
+.metric-label {
+  font-size: 0.68rem;
+  color: var(--text-tertiary);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  margin-bottom: 0.2rem;
+}
+
+.metric-value {
+  font: 600 0.9rem/1.2 var(--font-mono);
+  color: var(--cyan);
+}
+
+.posture-footer {
+  margin-top: 0.85rem;
+  padding-top: 0.65rem;
+  border-top: 1px solid var(--line);
+}
+
+/* Guided Therapy & Routines */
+.routine-banner {
+  padding: 0.9rem 1.1rem;
+  background: linear-gradient(135deg, rgba(99, 102, 241, 0.12) 0%, rgba(56, 189, 248, 0.05) 100%);
+  border: 1px solid rgba(99, 102, 241, 0.25);
+  border-radius: var(--radius-md);
+  box-shadow: 0 4px 18px rgba(0, 0, 0, 0.18);
+}
+
+.routine-meta {
+  display: flex;
+  gap: 0.5rem;
+  margin-bottom: 0.45rem;
+}
+
+.step-badge,
+.rep-badge {
+  font: 600 0.72rem/1 var(--font-mono);
+  padding: 0.25rem 0.55rem;
+  border-radius: var(--radius-xs);
+  border: 1px solid var(--line);
+  background: rgba(255, 255, 255, 0.04);
+  color: var(--text-secondary);
+}
+
+.rep-badge {
+  color: var(--cyan);
+  border-color: rgba(56, 189, 248, 0.25);
+  background: rgba(56, 189, 248, 0.1);
+}
+
+.routine-banner strong {
+  display: block;
+  font-size: 1.2rem;
+  font-weight: 700;
+  color: #ffffff;
+  letter-spacing: -0.02em;
+}
+
+.routine-cue {
+  margin: 0.35rem 0 0;
+  color: var(--text-secondary);
+  font-size: 0.82rem;
+  line-height: 1.35;
+}
+
+.hold-progress-area {
+  margin-top: 0.85rem;
+}
+
+.hold-labels {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.78rem;
+  color: var(--text-tertiary);
+  margin-bottom: 0.35rem;
+}
+
+.hold-labels span:last-child {
+  font-family: var(--font-mono);
+  color: var(--text-primary);
+  font-weight: 600;
+}
+
+.hold-progress-track {
+  height: 0.55rem;
+  background: rgba(255, 255, 255, 0.06);
+  border-radius: var(--radius-full);
+  overflow: hidden;
+  border: 1px solid var(--line);
+}
+
+.hold-progress-bar {
+  height: 100%;
+  background: linear-gradient(90deg, var(--accent) 0%, var(--cyan) 100%);
+  border-radius: var(--radius-full);
+  transition: width 0.1s linear;
+  box-shadow: 0 0 10px rgba(56, 189, 248, 0.4);
+}
+
+/* Range of Motion (ROM) Goniometer */
+.rom-display {
+  display: flex;
+  align-items: center;
+  justify-content: space-around;
+  padding: 0.85rem 1rem;
+  background: linear-gradient(135deg, rgba(56, 189, 248, 0.08) 0%, rgba(99, 102, 241, 0.06) 100%);
+  border: 1px solid rgba(56, 189, 248, 0.2);
+  border-radius: var(--radius-md);
+  margin-bottom: 0.85rem;
+}
+
+.rom-current,
+.rom-peak {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.rom-deg {
+  font: 700 1.65rem/1 var(--font-mono);
+  color: #ffffff;
+  letter-spacing: -0.02em;
+}
+
+.rom-current .rom-deg {
+  color: var(--cyan);
+}
+
+.rom-peak .rom-deg {
+  color: var(--accent-light);
+}
+
+.rom-label {
+  font-size: 0.74rem;
+  color: var(--text-tertiary);
+  margin-top: 0.25rem;
+}
+
+.rom-divider {
+  width: 1px;
+  height: 38px;
+  background: var(--line-strong);
+}
+
+.rom-progress-bar-container {
+  height: 0.45rem;
+  background: rgba(255, 255, 255, 0.06);
+  border-radius: var(--radius-full);
+  overflow: hidden;
+  margin-bottom: 0.85rem;
+}
+
+.rom-progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--cyan) 0%, var(--emerald) 100%);
+  border-radius: var(--radius-full);
+  transition: width 0.1s ease;
+}
+
+.rom-actions-row {
+  display: flex;
+  gap: 0.55rem;
+}
+
+.rom-actions-row button {
+  flex: 1;
+}
+
+.rom-test-status {
+  min-height: 1.5rem;
+  margin-top: 0.6rem;
+  font-size: 0.8rem;
+  color: var(--cyan);
+}
+
 /* ---------- Responsive ---------- */
 
 @media (max-width: 960px) {

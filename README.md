@@ -87,6 +87,13 @@ vector, plus a hold-and-threshold rule before the reported label changes, gives
 a steady readout — and each commit to a new label is one repetition, which is
 where the "times held" counter comes from.
 
+### 5. Health & Therapy Suite (`health.js`)
+
+- **Posture & Ergonomics Guard** — Evaluates craniovertebral head tilt (ear-to-shoulder offset), spine lean/slouch, and lateral shoulder slant in real-time. Features personalized upright baseline calibration and subtle audio alerts for prolonged slouching (>10s).
+- **Guided Therapy & Routines** — Interactive rehabilitation and mobility routines (Desk Ergonomics, Lower Body Mobility, Core & Balance). Features isometric hold timers, rep progression, biomechanical form verification, and offline Web Audio chime synthesizers.
+- **Range of Motion (ROM) Goniometer** — Clinical joint angle measurement against standard American Academy of Orthopaedic Surgeons (AAOS) benchmarks. Tracks real-time angles, peak session ROM, and runs 5-second mobility assessments with clinical limitation grading.
+- **Privacy-First Health Reports** — One-click export of structured health summaries (JSON) for telehealth review or personal wellness tracking.
+
 ## Privacy
 
 Frames are read from `getUserMedia` into a canvas, turned into 60 numbers and
