@@ -736,10 +736,10 @@
 
   /* ---------- modular dashboard widgets ---------- */
 
-  const WIDGET_STORAGE_KEY = 'possess.widgets.v1';
+  const WIDGET_STORAGE_KEY = 'possess.widgets.v2';
   const DEFAULT_LAYOUT = {
     order: ['source', 'prediction', 'teach'],
-    cols: { source: 7, prediction: 5, teach: 12 }
+    cols: { source: 5, prediction: 3, teach: 4 }
   };
 
   function initWidgets() {
@@ -779,14 +779,8 @@
           grid.appendChild(w);
           const col = layout.cols[id] || 12;
           w.dataset.cols = col;
-          updateSpanIndicator(w, col);
         }
       });
-    }
-
-    function updateSpanIndicator(widget, cols) {
-      const indicator = widget.querySelector('.span-indicator');
-      if (indicator) indicator.textContent = cols + ' cols';
     }
 
     // Initialize layout
@@ -803,6 +797,17 @@
 
     // Drag & Drop reordering
     let draggedWidget = null;
+
+    function isDropBefore(targetWidget, clientX, clientY) {
+      const rect = targetWidget.getBoundingClientRect();
+      const gridRect = grid.getBoundingClientRect();
+      // If single column / mobile or nearly full width, determine by vertical position
+      if (rect.width > gridRect.width * 0.75) {
+        return clientY < rect.top + rect.height / 2;
+      }
+      // In a multi-column row, determine by horizontal position
+      return clientX < rect.left + rect.width / 2;
+    }
 
     grid.querySelectorAll('.widget').forEach(function (widget) {
       const handle = widget.querySelector('.drag-handle');
@@ -833,9 +838,7 @@
         e.preventDefault();
         e.dataTransfer.dropEffect = 'move';
 
-        const rect = widget.getBoundingClientRect();
-        const midY = rect.top + rect.height / 2;
-        if (e.clientY < midY) {
+        if (isDropBefore(widget, e.clientX, e.clientY)) {
           widget.classList.add('drag-over-before');
           widget.classList.remove('drag-over-after');
         } else {
@@ -851,9 +854,7 @@
       widget.addEventListener('drop', function (e) {
         if (!draggedWidget || draggedWidget === widget) return;
         e.preventDefault();
-        const rect = widget.getBoundingClientRect();
-        const midY = rect.top + rect.height / 2;
-        if (e.clientY < midY) {
+        if (isDropBefore(widget, e.clientX, e.clientY)) {
           grid.insertBefore(draggedWidget, widget);
         } else {
           grid.insertBefore(draggedWidget, widget.nextSibling);
@@ -861,20 +862,6 @@
         widget.classList.remove('drag-over-before', 'drag-over-after');
         saveLayout();
       });
-
-      // Quick span cycle button
-      const spanBtn = widget.querySelector('.widget-span-btn');
-      if (spanBtn) {
-        spanBtn.addEventListener('click', function () {
-          const current = parseInt(widget.dataset.cols, 10) || 12;
-          const cycle = [6, 7, 8, 12, 4, 5];
-          const nextIdx = (cycle.indexOf(current) + 1) % cycle.length;
-          const next = cycle[nextIdx];
-          widget.dataset.cols = next;
-          updateSpanIndicator(widget, next);
-          saveLayout();
-        });
-      }
 
       // Drag-to-resize corner handle
       const resizeHandle = widget.querySelector('.widget-resize-handle');
@@ -892,10 +879,9 @@
           function onPointerMove(moveEvent) {
             const deltaX = moveEvent.clientX - startX;
             const colDelta = Math.round(deltaX / oneColWidth);
-            const targetCols = Math.min(12, Math.max(4, startCols + colDelta));
+            const targetCols = Math.min(12, Math.max(2, startCols + colDelta));
             if (parseInt(widget.dataset.cols, 10) !== targetCols) {
               widget.dataset.cols = targetCols;
-              updateSpanIndicator(widget, targetCols);
             }
           }
 
