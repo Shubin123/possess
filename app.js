@@ -353,15 +353,68 @@
   }
 
   /*
-   * Which head answers in "My trained model" mode. A network trained before
-   * the newest pose was recorded cannot name it, so while it is stale the
-   * nearest-neighbour head - which always covers everything recorded - takes
-   * over until the user retrains.
+   * Which head answers for custom poses. A network trained before the newest
+   * pose was recorded cannot name it, so while it is stale the nearest-neighbour
+   * head - which always covers everything recorded - takes over until the user
+   * retrains.
    */
   function activeBackend() {
-    if (el.backendMode.value !== 'trained') return null; // the rules answer
     if (state.model && state.knn && !sameLabels(state.model.labels, state.knn.labels)) return state.knn;
     return state.model || state.knn;
+  }
+
+  function combinePredictions(rulePred, customPred) {
+    if (!customPred || !customPred.labels.length) return rulePred;
+    if (!rulePred || !rulePred.labels.length) return customPred;
+
+    const customConfidence = customPred.matchConfidence !== undefined
+      ? customPred.matchConfidence
+      : customPred.score;
+    const rulePeak = rulePred.peak !== undefined ? rulePred.peak : rulePred.score;
+
+    const labels = [];
+    const scores = [];
+    const ranked = [];
+    const seen = new Set();
+
+    // 1. Custom poses first (stable ordering, slight priority boost for user-taught poses)
+    for (let i = 0; i < customPred.labels.length; i++) {
+      const lbl = customPred.labels[i];
+      seen.add(lbl);
+      const baseScore = customPred.labels.length === 1
+        ? (customPred.scores[i] || 0)
+        : (customPred.scores[i] || 0) * customConfidence;
+      // When a user explicitly teaches a custom pose, give it a 15% priority boost over generic rules
+      const rawScore = baseScore >= 0.35 ? Math.min(1, baseScore * 1.15) : baseScore;
+      labels.push(lbl);
+      scores.push(rawScore);
+      ranked.push({ label: lbl, score: rawScore, isCustom: true });
+    }
+
+    // 2. Built-in rule poses (stable ordering)
+    for (let j = 0; j < rulePred.labels.length; j++) {
+      const lbl = rulePred.labels[j];
+      if (seen.has(lbl)) continue;
+      const rawScore = (rulePred.scores[j] || 0) * (rulePeak || 1);
+      labels.push(lbl);
+      scores.push(rawScore);
+      ranked.push({ label: lbl, score: rawScore, isCustom: false });
+    }
+
+    ranked.sort(function (a, b) { return b.score - a.score; });
+
+    const top = ranked[0];
+    const topLabel = (top && top.score >= 0.25) ? top.label : 'unknown';
+    const topScore = top ? top.score : 0;
+
+    return {
+      label: topLabel,
+      score: topScore,
+      labels: labels,
+      scores: scores,
+      ranked: ranked,
+      measurements: rulePred.measurements
+    };
   }
 
   function handleFeature(feature, landmarks) {
@@ -373,16 +426,30 @@
     }
 
     let prediction = null;
-    if (el.backendMode.value === 'trained') {
+    const mode = el.backendMode ? el.backendMode.value : 'auto';
+
+    if (mode === 'trained') {
       const backend = activeBackend();
       prediction = backend ? backend.predict(feature.values) : null;
       if (!prediction) {
         el.topLabel.textContent = '—';
         el.topScore.textContent = 'record a couple of poses first';
       }
-    } else {
+    } else if (mode === 'rules') {
       prediction = PZ.rules.predict(feature);
       renderMeasurements(prediction.measurements);
+    } else {
+      // 'auto' mode: combine built-in rules and custom poses
+      const rulePred = PZ.rules.predict(feature);
+      renderMeasurements(rulePred.measurements);
+
+      const customBackend = activeBackend();
+      if (!customBackend || !customBackend.labels.length) {
+        prediction = rulePred;
+      } else {
+        const customPred = customBackend.predict(feature.values);
+        prediction = combinePredictions(rulePred, customPred);
+      }
     }
 
     if (prediction) {
@@ -520,6 +587,10 @@
     persistDataset();
     rebuildKnn();
     renderClasses();
+    state.renderedLabels = null;
+    if (el.backendMode.value === 'rules') {
+      el.backendMode.value = 'auto';
+    }
     const stale = state.model && state.knn && !sameLabels(state.model.labels, state.knn.labels);
     setTrainStatus('Recorded ' + done.captured + ' frames of "' + done.label + '".'
       + (done.full ? ' That pose is now as full as it can get.' : '')
@@ -538,8 +609,8 @@
    * rather than a prerequisite.
    */
   function rebuildKnn() {
-    const data = state.dataset.toTraining(MIN_SAMPLES_PER_CLASS);
-    if (data.labels.length < 2) { state.knn = null; return; }
+    const data = state.dataset.toTraining(3);
+    if (data.labels.length < 1) { state.knn = null; return; }
     state.knn = new PZ.classifier.KnnClassifier({ k: 5 }).fit(data.rows, data.targets, data.labels);
     state.smoother.reset();
   }
@@ -571,6 +642,7 @@
         persistDataset();
         rebuildKnn();
         renderClasses();
+        state.renderedLabels = null;
       });
       li.append(name, count, remove);
       el.classList.appendChild(li);
@@ -714,6 +786,10 @@
       persistDataset();
       rebuildKnn();
       renderClasses();
+      state.renderedLabels = null;
+      if (el.backendMode.value === 'rules') {
+        el.backendMode.value = 'auto';
+      }
       setTrainStatus('Imported ' + state.dataset.samples.length + ' samples.');
     } catch (err) {
       setTrainStatus('Could not import those samples: ' + err.message, true);

@@ -98,6 +98,7 @@
     this.k = opts.k || 5;
     this.labels = [];
     this.rows = [];
+    this.rawRows = [];
     this.targets = [];
     this.scaler = null;
   }
@@ -105,6 +106,7 @@
   KnnClassifier.prototype.fit = function (rows, targets, labels) {
     if (!rows.length) throw new Error('No samples to fit');
     this.labels = labels.slice();
+    this.rawRows = rows.slice();
     this.scaler = fitScaler(rows);
     this.rows = rows.map((row) => applyScaler(this.scaler, row));
     this.targets = targets.slice();
@@ -124,10 +126,10 @@
       for (let j = 0; j < q.length; j++) { const d = q[j] - r[j]; sum += d * d; }
       const dist = Math.sqrt(sum);
       if (best.length < k) {
-        best.push({ dist: dist, target: this.targets[i] });
+        best.push({ dist: dist, target: this.targets[i], index: i });
         best.sort(function (a, b) { return a.dist - b.dist; });
       } else if (dist < best[k - 1].dist) {
-        best[k - 1] = { dist: dist, target: this.targets[i] };
+        best[k - 1] = { dist: dist, target: this.targets[i], index: i };
         best.sort(function (a, b) { return a.dist - b.dist; });
       }
     }
@@ -139,7 +141,33 @@
       total += w;
     }
     for (let i = 0; i < scores.length; i++) scores[i] /= total || 1;
-    return toPrediction(this.labels, scores);
+    const pred = toPrediction(this.labels, scores);
+
+    let minRawDist = Infinity;
+    if (this.rawRows && best.length) {
+      const nearestIdx = best[0].index;
+      const nearestRaw = this.rawRows[nearestIdx];
+      let sumSq = 0;
+      for (let j = 0; j < row.length; j++) {
+        const diff = row[j] - nearestRaw[j];
+        sumSq += diff * diff;
+      }
+      minRawDist = Math.sqrt(sumSq);
+    }
+    pred.minRawDist = minRawDist;
+    const matchConfidence = Math.max(0, Math.min(1, Math.exp(-Math.pow(minRawDist / 0.85, 2))));
+    pred.matchConfidence = matchConfidence;
+
+    if (this.labels.length === 1) {
+      scores[0] = matchConfidence;
+      pred.scores = [matchConfidence];
+      pred.score = matchConfidence;
+      pred.ranked = [{ label: this.labels[0], score: matchConfidence }];
+      if (matchConfidence < 0.35) {
+        pred.label = 'unknown';
+      }
+    }
+    return pred;
   };
 
   /*
