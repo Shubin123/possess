@@ -32,3 +32,4 @@ jobs:
           cache: 'npm'
       - run: npm ci
       - run: npm run test:e2e
+      - run: node tests/health_ui.test.js
