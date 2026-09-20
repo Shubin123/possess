@@ -88,12 +88,12 @@ async function testHealthDashboard() {
 
     await page.goto(origin + '/', { waitUntil: 'domcontentloaded' });
 
-    // Verify all 6 widgets are present in the DOM
+    // Verify all 7 widgets are present in the DOM
     const widgetIds = await page.$$eval('.widget', ws => ws.map(w => w.id));
     assert.deepEqual(widgetIds, [
-      'widgetSource', 'widgetPrediction', 'widgetTeach',
+      'widgetSource', 'widgetPrediction', 'widgetTeach', 'widgetSports',
       'widgetPosture', 'widgetRoutine', 'widgetRom'
-    ], 'All 6 modules must be in the dashboard');
+    ], 'All 7 modules must be in the dashboard');
 
     // Start camera and feed standing pose
     await page.evaluate(() => { globalThis.__fakePose = 'standing'; });
@@ -138,11 +138,21 @@ async function testHealthDashboard() {
     const testingBtnText = await page.$eval('#romTestBtn', el => el.textContent);
     assert.ok(testingBtnText.includes('Testing'), 'Test button should indicate testing');
 
+    // Test Sports Motion Trainer pro demo
+    await page.click('#loadTennisDemoBtn');
+    await page.waitForFunction(() => {
+      const score = document.getElementById('sportsScoreNum');
+      return score && score.textContent !== '--' && parseInt(score.textContent, 10) >= 80;
+    }, { timeout: 6000 });
+
+    const guidance = await page.$eval('#sportsCameraGuidanceText', el => el.textContent);
+    assert.ok(guidance.includes('Side Profile'), 'Guidance should recommend side profile: ' + guidance);
+
     if (process.env.SCREENSHOT) {
       await page.screenshot({ path: process.env.SCREENSHOT, fullPage: true });
     }
 
-    console.log('✔ All 6 dashboard modules passed end-to-end browser integration verification!');
+    console.log('✔ All 7 dashboard modules passed end-to-end browser integration verification!');
   } finally {
     await browser.close();
     app.close();

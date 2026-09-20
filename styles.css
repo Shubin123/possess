@@ -1228,6 +1228,156 @@ ul {
   color: var(--cyan);
 }
 
+/* Sports Motion Trainer Widget */
+.camera-guidance-bar {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 0.8rem;
+  background: rgba(56, 189, 248, 0.08);
+  border: 1px solid rgba(56, 189, 248, 0.2);
+  border-radius: var(--radius-sm);
+  font: 500 0.78rem/1.3 var(--font-sans);
+  color: var(--cyan);
+  margin-bottom: 0.85rem;
+}
+
+.sports-phase-stepper {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.45rem;
+  margin-bottom: 0.85rem;
+}
+
+.phase-pill {
+  padding: 0.4rem 0.5rem;
+  text-align: center;
+  font: 600 0.75rem/1.2 var(--font-sans);
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-xs);
+  color: var(--text-tertiary);
+  transition: all 0.2s ease;
+}
+
+.phase-pill.active {
+  background: linear-gradient(135deg, rgba(99, 102, 241, 0.25) 0%, rgba(56, 189, 248, 0.15) 100%);
+  border-color: var(--cyan);
+  color: #ffffff;
+  box-shadow: 0 0 12px rgba(56, 189, 248, 0.3);
+}
+
+.sports-comparison-card {
+  display: flex;
+  gap: 1.1rem;
+  padding: 0.95rem 1.15rem;
+  background: linear-gradient(135deg, rgba(99, 102, 241, 0.09) 0%, rgba(56, 189, 248, 0.05) 100%);
+  border: 1px solid rgba(99, 102, 241, 0.2);
+  border-radius: var(--radius-md);
+  margin-bottom: 0.85rem;
+}
+
+.sports-score-column {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.sports-score-circle {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: 58px;
+  height: 58px;
+  border-radius: var(--radius-full);
+  background: rgba(99, 102, 241, 0.15);
+  border: 2px solid var(--accent);
+  box-shadow: 0 0 14px rgba(99, 102, 241, 0.35);
+}
+
+.sports-score-num {
+  font: 700 1.25rem/1 var(--font-mono);
+  color: #ffffff;
+}
+
+.sports-score-label {
+  font: 600 0.55rem/1 var(--font-sans);
+  color: var(--cyan);
+  letter-spacing: 0.05em;
+  margin-top: 1px;
+}
+
+.reps-label {
+  font-size: 0.74rem;
+  color: var(--text-tertiary);
+  margin-top: 0.4rem;
+  font-family: var(--font-mono);
+}
+
+.sports-metrics-list {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  justify-content: center;
+  min-width: 0;
+}
+
+.sports-metric-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.4rem 0.65rem;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+}
+
+.metric-info {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.metric-name {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.metric-target {
+  font-size: 0.72rem;
+  color: var(--text-tertiary);
+  font-family: var(--font-mono);
+}
+
+.metric-val-badge {
+  font: 700 0.88rem/1 var(--font-mono);
+  padding: 0.25rem 0.55rem;
+  border-radius: var(--radius-xs);
+  background: rgba(245, 158, 11, 0.15);
+  border: 1px solid rgba(245, 158, 11, 0.35);
+  color: #f59e0b;
+}
+
+.metric-val-badge.in-range {
+  background: rgba(16, 185, 129, 0.15);
+  border-color: rgba(16, 185, 129, 0.35);
+  color: var(--emerald);
+}
+
+.coaching-banner {
+  padding: 0.65rem 0.85rem;
+  background: rgba(255, 255, 255, 0.025);
+  border-left: 3px solid var(--cyan);
+  border-radius: var(--radius-xs);
+  font: 500 0.82rem/1.4 var(--font-sans);
+  color: var(--text-secondary);
+}
+
 /* ---------- Responsive ---------- */
 
 @media (max-width: 960px) {

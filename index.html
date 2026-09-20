@@ -166,7 +166,82 @@
         <div class="widget-resize-handle" title="Drag to resize width"></div>
       </section>
 
-      <section class="card widget" id="widgetPosture" data-widget="posture" data-cols="4" aria-labelledby="posture-title">
+      <section class="card widget" id="widgetSports" data-widget="sports" data-cols="6" aria-labelledby="sports-title">
+        <div class="widget-header">
+          <div class="widget-title-area">
+            <span class="drag-handle" title="Drag to reorder" aria-label="Drag widget">
+              <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor">
+                <circle cx="5" cy="3.5" r="1.5"/><circle cx="11" cy="3.5" r="1.5"/>
+                <circle cx="5" cy="8" r="1.5"/><circle cx="11" cy="8" r="1.5"/>
+                <circle cx="5" cy="12.5" r="1.5"/><circle cx="11" cy="12.5" r="1.5"/>
+              </svg>
+            </span>
+            <h2 id="sports-title">Sports Motion Trainer</h2>
+          </div>
+          <div class="widget-actions">
+            <select id="sportsPresetSelect" aria-label="Select Sport Motion">
+              <option value="tennis-serve">Tennis: Serve Mechanics</option>
+              <option value="tennis-forehand">Tennis: Topspin Forehand</option>
+              <option value="golf-swing">Golf: Full Drive</option>
+              <option value="basketball-shot">Basketball: Jump Shot</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="camera-guidance-bar" id="sportsCameraGuidance">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/>
+            <circle cx="12" cy="13" r="4"/>
+          </svg>
+          <span id="sportsCameraGuidanceText">Recommended View: Side Profile (90° view facing hitting side)</span>
+        </div>
+
+        <div class="sports-phase-stepper" id="sportsPhaseStepper">
+          <div class="phase-pill active" id="phasePill0">1. Trophy Load</div>
+          <div class="phase-pill" id="phasePill1">2. Contact Apex</div>
+          <div class="phase-pill" id="phasePill2">3. Follow-Through</div>
+        </div>
+
+        <div class="sports-comparison-card">
+          <div class="sports-score-column">
+            <div class="sports-score-circle" id="sportsScoreCircle">
+              <span class="sports-score-num" id="sportsScoreNum">--</span>
+              <span class="sports-score-label">FORM</span>
+            </div>
+            <span class="reps-label" id="sportsRepsCount">Swings: 0</span>
+          </div>
+
+          <div class="sports-metrics-list" id="sportsMetricsList">
+            <div class="sports-metric-row">
+              <div class="metric-info">
+                <span class="metric-name" id="sportsMetricName0">Elbow Cocking</span>
+                <span class="metric-target" id="sportsMetricTarget0">Target: 90°–108°</span>
+              </div>
+              <div class="metric-val-badge in-range" id="sportsMetricBadge0">--°</div>
+            </div>
+            <div class="sports-metric-row">
+              <div class="metric-info">
+                <span class="metric-name" id="sportsMetricName1">Shoulder Height</span>
+                <span class="metric-target" id="sportsMetricTarget1">Target: 85°–105°</span>
+              </div>
+              <div class="metric-val-badge" id="sportsMetricBadge1">--°</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="coaching-banner" id="sportsFeedbackBanner">
+          Position camera in side profile view and begin swing motion.
+        </div>
+
+        <div class="button-row">
+          <button id="loadTennisDemoBtn" type="button">Load Pro Tennis Demo</button>
+          <button id="resetSportsBtn" type="button" class="secondary">Reset</button>
+          <button id="exportSportsReportBtn" type="button" class="secondary">Export Analysis</button>
+        </div>
+        <div class="widget-resize-handle" title="Drag to resize width"></div>
+      </section>
+
+      <section class="card widget" id="widgetPosture" data-widget="posture" data-cols="3" aria-labelledby="posture-title">
         <div class="widget-header">
           <div class="widget-title-area">
             <span class="drag-handle" title="Drag to reorder" aria-label="Drag widget">
@@ -218,7 +293,7 @@
         <div class="widget-resize-handle" title="Drag to resize width"></div>
       </section>
 
-      <section class="card widget" id="widgetRoutine" data-widget="routine" data-cols="4" aria-labelledby="routine-title">
+      <section class="card widget" id="widgetRoutine" data-widget="routine" data-cols="3" aria-labelledby="routine-title">
         <div class="widget-header">
           <div class="widget-title-area">
             <span class="drag-handle" title="Drag to reorder" aria-label="Drag widget">
@@ -265,7 +340,7 @@
         <div class="widget-resize-handle" title="Drag to resize width"></div>
       </section>
 
-      <section class="card widget" id="widgetRom" data-widget="rom" data-cols="4" aria-labelledby="rom-title">
+      <section class="card widget" id="widgetRom" data-widget="rom" data-cols="6" aria-labelledby="rom-title">
         <div class="widget-header">
           <div class="widget-title-area">
             <span class="drag-handle" title="Drag to reorder" aria-label="Drag widget">
@@ -325,6 +400,7 @@
   <script src="model-cache.js"></script>
   <script src="pose.js"></script>
   <script src="health.js"></script>
+  <script src="sports.js"></script>
   <script src="app.js"></script>
 </body>
 </html>

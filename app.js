@@ -49,7 +49,22 @@
     romJointSelect: $('romJointSelect'), romCurrentDeg: $('romCurrentDeg'),
     romPeakDeg: $('romPeakDeg'), romNormLabel: $('romNormLabel'),
     romProgressFill: $('romProgressFill'), romTestBtn: $('romTestBtn'),
-    romTestStatus: $('romTestStatus'), exportHealthReport: $('exportHealthReport')
+    romTestStatus: $('romTestStatus'), exportHealthReport: $('exportHealthReport'),
+
+    // Sports Motion Trainer elements
+    sportsPresetSelect: $('sportsPresetSelect'),
+    sportsCameraGuidanceText: $('sportsCameraGuidanceText'),
+    sportsPhaseStepper: $('sportsPhaseStepper'),
+    phasePill0: $('phasePill0'), phasePill1: $('phasePill1'), phasePill2: $('phasePill2'),
+    sportsScoreNum: $('sportsScoreNum'), sportsScoreCircle: $('sportsScoreCircle'),
+    sportsRepsCount: $('sportsRepsCount'),
+    sportsMetricName0: $('sportsMetricName0'), sportsMetricTarget0: $('sportsMetricTarget0'),
+    sportsMetricBadge0: $('sportsMetricBadge0'),
+    sportsMetricName1: $('sportsMetricName1'), sportsMetricTarget1: $('sportsMetricTarget1'),
+    sportsMetricBadge1: $('sportsMetricBadge1'),
+    sportsFeedbackBanner: $('sportsFeedbackBanner'),
+    loadTennisDemoBtn: $('loadTennisDemoBtn'), resetSportsBtn: $('resetSportsBtn'),
+    exportSportsReportBtn: $('exportSportsReportBtn')
   };
 
   const state = {
@@ -76,7 +91,10 @@
       rom: new PZ.health.RomGoniometer(),
       session: new PZ.health.HealthSessionManager(),
       lastLandmarks: null
-    } : null)
+    } : null),
+    sports: (PZ.sports ? new PZ.sports.SportsMotionAnalyzer() : null),
+    demoAnimationId: null,
+    demoPlaying: false
   };
 
   const ctx = el.overlay.getContext('2d');
@@ -452,6 +470,9 @@
         renderRoutine(state.health.routine.getStatus());
         renderRom(state.health.rom.update(null));
       }
+      if (state.sports) {
+        renderSports({ valid: false, feedback: 'Step into camera frame to begin sports motion tracking.' });
+      }
       return;
     }
 
@@ -518,6 +539,12 @@
 
       const romResult = state.health.rom.update(landmarks);
       renderRom(romResult);
+    }
+
+    // Sports motion trainer updates
+    if (state.sports && !state.demoPlaying && landmarks && landmarks.length >= 33) {
+      const sportsResult = state.sports.analyze(landmarks);
+      renderSports(sportsResult);
     }
   }
 
@@ -671,6 +698,67 @@
         const r = res.completedTestResult;
         el.romTestStatus.textContent = 'Result: ' + r.peakDeg + '° (' + r.percentNormal + '% normal) — ' + r.grade;
       }
+    }
+  }
+
+  /* ---------- sports rendering helpers ---------- */
+
+  function renderSports(res) {
+    if (!el.sportsScoreNum || !res) return;
+
+    if (!res.valid) {
+      el.sportsScoreNum.textContent = '--';
+      if (el.sportsFeedbackBanner) {
+        el.sportsFeedbackBanner.textContent = res.feedback || 'Step into camera frame to begin sports motion tracking.';
+      }
+      return;
+    }
+
+    if (el.sportsCameraGuidanceText && res.preset) {
+      el.sportsCameraGuidanceText.textContent = 'Recommended View: ' + res.preset.cameraGuidance;
+    }
+
+    el.sportsScoreNum.textContent = res.overallScore != null ? res.overallScore : '--';
+
+    if (el.sportsRepsCount && res.preset) {
+      const repWord = res.preset.id.startsWith('tennis') ? 'Swings' : 'Reps';
+      el.sportsRepsCount.textContent = repWord + ': ' + (res.repsCompleted || 0);
+    }
+
+    // Stepper pills
+    if (res.preset && res.preset.phases) {
+      const pills = [el.phasePill0, el.phasePill1, el.phasePill2];
+      res.preset.phases.forEach(function (ph, idx) {
+        if (pills[idx]) {
+          pills[idx].textContent = (idx + 1) + '. ' + ph.name.split(' ')[0];
+          pills[idx].classList.toggle('active', idx === res.currentPhaseIndex);
+        }
+      });
+    }
+
+    // Dynamic metrics
+    if (res.metrics && res.metrics.length > 0) {
+      const m0 = res.metrics[0];
+      if (el.sportsMetricName0) el.sportsMetricName0.textContent = m0.name;
+      if (el.sportsMetricTarget0) el.sportsMetricTarget0.textContent = 'Target: ' + m0.targetMin + '°–' + m0.targetMax + '°';
+      if (el.sportsMetricBadge0) {
+        el.sportsMetricBadge0.textContent = m0.current + (m0.unit || '°');
+        el.sportsMetricBadge0.className = 'metric-val-badge' + (m0.inRange ? ' in-range' : '');
+      }
+
+      if (res.metrics.length > 1) {
+        const m1 = res.metrics[1];
+        if (el.sportsMetricName1) el.sportsMetricName1.textContent = m1.name;
+        if (el.sportsMetricTarget1) el.sportsMetricTarget1.textContent = 'Target: ' + m1.targetMin + '°–' + m1.targetMax + '°';
+        if (el.sportsMetricBadge1) {
+          el.sportsMetricBadge1.textContent = m1.current + (m1.unit || '°');
+          el.sportsMetricBadge1.className = 'metric-val-badge' + (m1.inRange ? ' in-range' : '');
+        }
+      }
+    }
+
+    if (el.sportsFeedbackBanner) {
+      el.sportsFeedbackBanner.textContent = res.feedback || '';
     }
   }
 
@@ -948,10 +1036,10 @@
 
   /* ---------- modular dashboard widgets ---------- */
 
-  const WIDGET_STORAGE_KEY = 'possess.widgets.v3';
+  const WIDGET_STORAGE_KEY = 'possess.widgets.v4';
   const DEFAULT_LAYOUT = {
-    order: ['source', 'prediction', 'teach', 'posture', 'routine', 'rom'],
-    cols: { source: 5, prediction: 3, teach: 4, posture: 4, routine: 4, rom: 4 }
+    order: ['source', 'prediction', 'teach', 'sports', 'posture', 'routine', 'rom'],
+    cols: { source: 5, prediction: 3, teach: 4, sports: 6, posture: 3, routine: 3, rom: 6 }
   };
 
   function initWidgets() {
@@ -1196,6 +1284,113 @@
     });
   }
 
+  /* ---------- sports event listeners ---------- */
+
+  if (el.sportsPresetSelect) {
+    el.sportsPresetSelect.addEventListener('change', function () {
+      if (!state.sports) return;
+      state.sports.setPreset(el.sportsPresetSelect.value);
+      if (state.health && state.health.lastLandmarks) {
+        renderSports(state.sports.analyze(state.health.lastLandmarks));
+      } else {
+        renderSports({
+          valid: false,
+          preset: state.sports.preset,
+          feedback: 'Position yourself in ' + state.sports.preset.cameraGuidance + ' and begin motion.'
+        });
+      }
+    });
+  }
+
+  if (el.resetSportsBtn) {
+    el.resetSportsBtn.addEventListener('click', function () {
+      if (!state.sports) return;
+      if (state.demoAnimationId) {
+        cancelAnimationFrame(state.demoAnimationId);
+        state.demoAnimationId = null;
+      }
+      state.demoPlaying = false;
+      state.sports.reset();
+      renderSports({
+        valid: false,
+        preset: state.sports.preset,
+        feedback: 'Position yourself in ' + state.sports.preset.cameraGuidance + ' and begin motion.'
+      });
+    });
+  }
+
+  if (el.exportSportsReportBtn) {
+    el.exportSportsReportBtn.addEventListener('click', function () {
+      if (!state.sports) return;
+      const report = {
+        preset: state.sports.preset.id,
+        sport: state.sports.preset.sport,
+        cameraGuidance: state.sports.preset.cameraGuidance,
+        repsCompleted: state.sports.completedRepCount,
+        phaseScores: state.sports.phaseScores,
+        lastFeedback: state.sports.lastFeedback,
+        timestamp: new Date().toISOString()
+      };
+      download('possess-sports-report.json', report);
+    });
+  }
+
+  if (el.loadTennisDemoBtn) {
+    el.loadTennisDemoBtn.addEventListener('click', function () {
+      if (!state.sports || !PZ.sports.generateTennisServeFrames) return;
+      if (state.demoAnimationId) {
+        cancelAnimationFrame(state.demoAnimationId);
+        state.demoAnimationId = null;
+      }
+      state.demoPlaying = true;
+      state.sports.setPreset('tennis-serve');
+      if (el.sportsPresetSelect) el.sportsPresetSelect.value = 'tennis-serve';
+
+      const frames = PZ.sports.generateTennisServeFrames();
+      let frameIndex = 0;
+      let lastTime = 0;
+      const fpsInterval = 1000 / 30; // 30 fps playback
+
+      showStage('camera');
+      if (!el.overlay.width || el.overlay.width < 100) {
+        el.overlay.width = el.stage.clientWidth || 640;
+        el.overlay.height = el.stage.clientHeight || 480;
+      }
+
+      // Render frame 0 immediately so UI responds instantaneously
+      const firstRes = state.sports.analyze(frames[0], 0.033);
+      drawPose(frames[0], { width: el.overlay.width, height: el.overlay.height });
+      renderSports(firstRes);
+      frameIndex = 1;
+
+      function step(now) {
+        if (!lastTime) lastTime = now;
+        const elapsed = now - lastTime;
+
+        if (elapsed > fpsInterval) {
+          lastTime = now - (elapsed % fpsInterval);
+          const frame = frames[frameIndex];
+          drawPose(frame, { width: el.overlay.width, height: el.overlay.height });
+          const sportsResult = state.sports.analyze(frame, 0.033);
+          renderSports(sportsResult);
+
+          frameIndex++;
+          if (frameIndex >= frames.length) {
+            state.demoAnimationId = null;
+            state.demoPlaying = false;
+            if (el.sportsFeedbackBanner) {
+              el.sportsFeedbackBanner.textContent = '✓ Pro tennis serve demo completed. Step into camera frame for your swing!';
+            }
+            return;
+          }
+        }
+        state.demoAnimationId = requestAnimationFrame(step);
+      }
+
+      state.demoAnimationId = requestAnimationFrame(step);
+    });
+  }
+
   /* ---------- start ---------- */
 
   populateModels();
@@ -1212,6 +1407,14 @@
     renderPosture({ valid: false, label: 'Ready', score: 100, advice: 'Stand in frame to monitor posture' });
     renderRoutine(state.health.routine.getStatus());
     renderRom(state.health.rom.update(null));
+  }
+
+  if (state.sports) {
+    renderSports({
+      valid: false,
+      preset: state.sports.preset,
+      feedback: 'Position yourself in ' + state.sports.preset.cameraGuidance + ' and begin motion.'
+    });
   }
 
   // Exposed for the end-to-end test, which drives the page without a camera.

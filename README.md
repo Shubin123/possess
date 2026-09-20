@@ -94,6 +94,16 @@ where the "times held" counter comes from.
 - **Range of Motion (ROM) Goniometer** — Clinical joint angle measurement against standard American Academy of Orthopaedic Surgeons (AAOS) benchmarks. Tracks real-time angles, peak session ROM, and runs 5-second mobility assessments with clinical limitation grading.
 - **Privacy-First Health Reports** — One-click export of structured health summaries (JSON) for telehealth review or personal wellness tracking.
 
+### 6. Sports Motion Training (`sports.js`)
+
+- **Biomechanical Technique Analysis** — Kinematic phase tracking and range of motion evaluation for sports motions:
+  - **Tennis**: Serve mechanics (Trophy Pose loading, Contact Point apex reach, Follow-Through pronation) and Topspin Forehand (unit turn, impact in front, windshield-wiper finish).
+  - **Golf**: Drive & swing mechanics (address spine angle, lead arm extension at top of backswing, balanced finish).
+  - **Basketball**: Set point shooting elbow tuck and high release extension.
+- **Camera Angle Guidance** — Informs users of the optimal setup angle (e.g., 90° Side Profile facing hitting arm for serve, Down-The-Line for golf).
+- **Pro Benchmarks & Coaching Cues** — Compares real-time joint angles against professional tour benchmarks with direct actionable cues (e.g., *"Lift your hitting elbow to shoulder level"* or *"Bend hitting elbow closer to 90° for explosive lag"*).
+- **Pro Demonstration Sequences** — Built-in synthetic 60fps professional motion sequence playback for instant visualization and form comparison.
+
 ## Privacy
 
 Frames are read from `getUserMedia` into a canvas, turned into 60 numbers and
@@ -164,4 +174,6 @@ hips — either one alone misfires on a low camera angle or on a lunge.
 | `classifier.js` | k-NN, the MLP, serialization, prediction smoothing |
 | `dataset.js` | Recorded samples, counts, persistence, import/export |
 | `model-cache.js` | IndexedDB storage for the pose weights |
-| `app.js` | Camera, render loop, overlay, and the page's wiring |
+| `health.js` | Posture guard, guided therapy routines, clinical ROM goniometer |
+| `sports.js` | Sports motion trainer, multi-phase tracking, pro benchmarks |
+| `app.js` | Camera, render loop, overlay, modular grid, and dashboard wiring |
